@@ -1,15 +1,131 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <title>星樹工坊登入</title>
+  <meta charset="UTF-8" />
+  <title>星樹工坊｜工單聊天室</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, sans-serif; background:#0f1115; color:#fff; margin:0; }
+    header { padding:12px 16px; background:#171a22; display:flex; justify-content:space-between; align-items:center; }
+    button { background:#5c7cff; border:none; color:#fff; padding:8px 12px; border-radius:6px; cursor:pointer; }
+    button.danger{ background:#d14; }
+    #loginBox, #chatBox { display:none; padding:16px; }
+    #messages { height:60vh; overflow-y:auto; background:#111; padding:12px; border-radius:8px; }
+    .msg{ margin:6px 0; }
+    .site{ color:#7cf; }
+    .dc{ color:#fc7; }
+    #sendBar{ display:flex; gap:8px; margin-top:8px; }
+    input, textarea{ flex:1; padding:8px; border-radius:6px; border:none; }
+    select{ padding:8px; border-radius:6px; }
+  </style>
 </head>
 <body>
-  <h1>星樹工坊登入</h1>
+<header>
+  <div>🌲 星樹工坊 工單聊天室</div>
+  <div id="userArea"></div>
+</header>
 
-  <a href="https://api.dreamlight.site/auth/discord" target="_top">
-    <button>使用 Discord 登入</button>
-  </a>
+<div id="loginBox">
+  <h2>登入</h2>
+  <button onclick="login()">使用 Discord 登入</button>
+</div>
 
+<div id="chatBox">
+  <div style="margin-bottom:8px;">
+    工單代碼：
+    <input id="ticketInput" placeholder="例如 COM-20260101010101" />
+    <button onclick="loadChat()">載入聊天</button>
+  </div>
+
+  <div id="messages"></div>
+
+  <div id="sendBar">
+    <textarea id="msgInput" rows="2" placeholder="輸入訊息..."></textarea>
+    <button onclick="sendMsg()">送出</button>
+  </div>
+</div>
+
+<script>
+const API = "http://127.0.0.1:10001"; // 依你後端設定修改
+
+// 取得 token（URL 或 localStorage）
+const params = new URLSearchParams(location.search);
+if(params.get("token")){
+  localStorage.setItem("token", params.get("token"));
+  history.replaceState({}, "", location.pathname);
+}
+const token = localStorage.getItem("token");
+
+const loginBox = document.getElementById("loginBox");
+const chatBox = document.getElementById("chatBox");
+const userArea = document.getElementById("userArea");
+
+function login(){
+  location.href = API + "/auth/discord";
+}
+
+function logout(){
+  fetch(API+"/api/logout",{method:"POST",headers:{Authorization:"Bearer "+token}})
+  .then(()=>{ localStorage.removeItem("token"); location.reload(); });
+}
+
+async function checkLogin(){
+  if(!token){ showLogin(); return; }
+  const r = await fetch(API+"/api/me",{headers:{Authorization:"Bearer "+token}});
+  const d = await r.json();
+  if(d.error){ showLogin(); return; }
+  userArea.innerHTML = `👤 ${d.username} <button class='danger' onclick='logout()'>登出</button>`;
+  loginBox.style.display="none";
+  chatBox.style.display="block";
+}
+
+function showLogin(){
+  loginBox.style.display="block";
+  chatBox.style.display="none";
+  userArea.innerHTML="";
+}
+
+let currentTicket = null;
+let timer = null;
+
+async function loadChat(){
+  const code = document.getElementById("ticketInput").value.trim();
+  if(!code) return alert("請輸入工單代碼");
+  currentTicket = code;
+  await refreshChat();
+  if(timer) clearInterval(timer);
+  timer = setInterval(refreshChat, 3000);
+}
+
+async function refreshChat(){
+  if(!currentTicket) return;
+  const r = await fetch(API+`/api/chat/${currentTicket}`);
+  const rows = await r.json();
+  const box = document.getElementById("messages");
+  box.innerHTML = "";
+  for(const m of rows){
+    const div = document.createElement("div");
+    div.className = "msg " + (m.from_site?"site":"dc");
+    div.textContent = `[${m.username}] ${m.content}`;
+    box.appendChild(div);
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+async function sendMsg(){
+  const txt = document.getElementById("msgInput");
+  const v = txt.value.trim();
+  if(!v || !currentTicket) return;
+  await fetch(API+"/api/chat/send",{
+    method:"POST",
+    headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},
+    body:JSON.stringify({ticket_code:currentTicket, content:v})
+  });
+  txt.value="";
+  setTimeout(refreshChat,500);
+}
+
+checkLogin();
+</script>
 </body>
 </html>
