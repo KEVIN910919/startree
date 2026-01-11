@@ -6,16 +6,22 @@
 </head>
 <body>
   <h1>登入成功</h1>
-  <div id="info"></div>
+  <div id="info">處理中...</div>
 
   <script>
     const token = new URLSearchParams(location.search).get("token");
+
     if (!token) {
       document.getElementById("info").innerText = "沒有收到 token";
     } else {
       localStorage.setItem("token", token);
-      document.getElementById("info").innerText = "Token 已儲存";
+      document.getElementById("info").innerText = "登入完成，正在返回首頁...";
       console.log("JWT:", token);
+
+      // 🔁 跳回主聊天室頁
+      setTimeout(() => {
+        location.href = "index.html";
+      }, 1000);
     }
   </script>
 </body>
