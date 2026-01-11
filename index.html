@@ -101,6 +101,28 @@ button.danger{
 }
 .actions{display:flex;gap:8px;margin:8px 0;}
 .locked{opacity:.5;pointer-events:none;}
+
+#confirmMask{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+.confirmBox{
+  background:#0b3f42;
+  padding:20px;
+  border-radius:14px;
+  width:280px;
+  text-align:center;
+  box-shadow:0 0 30px #0009;
+}
+.confirmBox h3{margin:0 0 10px;}
+.confirmBtns{display:flex;gap:10px;justify-content:center;margin-top:14px;}
+.confirmBtns button{min-width:90px;}
+  
 </style>
 </head>
 <body>
@@ -139,6 +161,18 @@ button.danger{
   </div>
 </div>
 
+<!-- 自訂確認視窗 -->
+<div id="confirmMask" style="display:none;">
+  <div class="confirmBox">
+    <h3 id="confirmTitle">確認操作</h3>
+    <p id="confirmText"></p>
+    <div class="confirmBtns">
+      <button id="confirmYes">確定</button>
+      <button id="confirmNo" class="danger">取消</button>
+    </div>
+  </div>
+</div>
+  
 <script>
 function login(){
   window.open(API+"/auth/discord","dcLogin","width=500,height=700");
@@ -289,29 +323,57 @@ async function sendMsg(){
 }
 
 // ===== 工單操作 =====
-async function cancelTicket(){
-  if(!confirm("確定要中止委託？"))return;
-  const token=localStorage.getItem("token");
-  await fetch(API+"/api/ticket/cancel",{
-    method:"POST",
-    headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},
-    body:JSON.stringify({ticket_code:currentTicket})
+function cancelTicket(){
+  showConfirm("確定要中止委託？", async ()=>{
+    const token = localStorage.getItem("token");
+    await fetch(API+"/api/ticket/cancel",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        Authorization:"Bearer "+token
+      },
+      body:JSON.stringify({ticket_code: currentTicket})
+    });
+    alert("已送出中止請求");
   });
-  alert("已送出中止請求");
 }
 
-async function closeTicket(){
-  if(!confirm("確定要結單？"))return;
-  const token=localStorage.getItem("token");
-  await fetch(API+"/api/ticket/close",{
-    method:"POST",
-    headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},
-    body:JSON.stringify({ticket_code:currentTicket})
+function closeTicket(){
+  showConfirm("確定要結單？", async ()=>{
+    const token = localStorage.getItem("token");
+    await fetch(API+"/api/ticket/close",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        Authorization:"Bearer "+token
+      },
+      body:JSON.stringify({ticket_code: currentTicket})
+    });
+    alert("已送出結單請求");
   });
-  alert("已送出結單請求");
 }
 
 checkLogin();
+
+let confirmCallback = null;
+
+function showConfirm(text, cb){
+  confirmCallback = cb;
+  document.getElementById("confirmText").textContent = text;
+  document.getElementById("confirmMask").style.display = "flex";
+}
+
+function closeConfirm(){
+  document.getElementById("confirmMask").style.display = "none";
+  confirmCallback = null;
+}
+
+document.getElementById("confirmYes").onclick = ()=>{
+  if(confirmCallback) confirmCallback();
+  closeConfirm();
+};
+document.getElementById("confirmNo").onclick = closeConfirm;
+  
 </script>
 </body>
 </html>
