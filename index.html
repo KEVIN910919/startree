@@ -85,6 +85,120 @@ button.danger{background:linear-gradient(135deg,#e86a6a,#c73737);color:#fff;}
   height: 2.4em;
   vertical-align: middle;
 }
+
+/* ===========================
+   📱 Mobile Responsive
+=========================== */
+@media (max-width: 768px){
+
+  header{
+    flex-direction:column;
+    gap:6px;
+    text-align:center;
+  }
+
+  .layout{
+    flex-direction:column;
+    height:auto;
+  }
+
+  .sidebar{
+    width:100%;
+    max-height:180px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    display:flex;
+    flex-direction:row;
+    gap:8px;
+    padding:8px;
+  }
+
+  .sidebar h3,
+  .sidebar button{
+    flex-shrink:0;
+  }
+
+  #ticketList{
+    display:flex;
+    gap:8px;
+  }
+
+  .ticket{
+    white-space:nowrap;
+    min-width:120px;
+  }
+
+  .main{
+    padding:10px;
+  }
+
+  .card{
+    padding:12px;
+    border-radius:14px;
+  }
+
+  #messages{
+    height:calc(100vh - 320px);
+    font-size:15px;
+  }
+
+  .msg{
+    font-size:15px;
+    line-height:1.4;
+  }
+
+  .tag{
+    font-size:11px;
+    min-width:42px;
+  }
+
+  #sendBar{
+    flex-direction:row;
+    gap:6px;
+  }
+
+  textarea{
+    min-height:44px;
+    font-size:16px;
+  }
+
+  button{
+    padding:10px 12px;
+    font-size:15px;
+  }
+
+  .actions{
+    flex-wrap:wrap;
+  }
+
+  .actions button{
+    flex:1;
+    min-width:120px;
+  }
+
+  /* 登入卡片 */
+  .loginCard{
+    width:90%;
+    padding:28px 24px;
+  }
+
+  /* 建立工單視窗 */
+  #createMask .confirmBox{
+    width:92%;
+  }
+
+  #createMask input,
+  #createMask select{
+    font-size:16px;
+    padding:6px;
+  }
+
+  /* 避免手機鍵盤遮住輸入框 */
+  body{
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+}
   
 </style>
 </head>
