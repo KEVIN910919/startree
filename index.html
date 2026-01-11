@@ -16,7 +16,6 @@
     .dc{ color:#fc7; }
     #sendBar{ display:flex; gap:8px; margin-top:8px; }
     input, textarea{ flex:1; padding:8px; border-radius:6px; border:none; }
-    select{ padding:8px; border-radius:6px; }
   </style>
 </head>
 <body>
@@ -46,38 +45,30 @@
 </div>
 
 <script>
-const API = "https://api.dreamlight.site"; // 依你後端設定修改
+const API = "https://api.dreamlight.site"; // 改成你後端
 
-// 取得 token（URL 或 localStorage）
-const params = new URLSearchParams(location.search);
-if(params.get("token")){
-  localStorage.setItem("token", params.get("token"));
-  history.replaceState({}, "", location.pathname);
+let loginWin = null;
+
+function login(){
+  loginWin = window.open(
+    API + "/auth/discord",
+    "discordLogin",
+    "width=500,height=700"
+  );
 }
-const token = localStorage.getItem("token");
 
+// 接收授權結果
+window.addEventListener("message", (e)=>{
+  if(!e.data || !e.data.token) return;
+  localStorage.setItem("token", e.data.token);
+  if(loginWin) loginWin.close();
+  checkLogin();
+});
+
+// UI 控制
 const loginBox = document.getElementById("loginBox");
 const chatBox = document.getElementById("chatBox");
 const userArea = document.getElementById("userArea");
-
-function login(){
-  window.open(API + "/auth/discord", "_blank");
-}
-
-function logout(){
-  fetch(API+"/api/logout",{method:"POST",headers:{Authorization:"Bearer "+token}})
-  .then(()=>{ localStorage.removeItem("token"); location.reload(); });
-}
-
-async function checkLogin(){
-  if(!token){ showLogin(); return; }
-  const r = await fetch(API+"/api/me",{headers:{Authorization:"Bearer "+token}});
-  const d = await r.json();
-  if(d.error){ showLogin(); return; }
-  userArea.innerHTML = `👤 ${d.username} <button class='danger' onclick='logout()'>登出</button>`;
-  loginBox.style.display="none";
-  chatBox.style.display="block";
-}
 
 function showLogin(){
   loginBox.style.display="block";
@@ -85,6 +76,34 @@ function showLogin(){
   userArea.innerHTML="";
 }
 
+function showChat(user){
+  loginBox.style.display="none";
+  chatBox.style.display="block";
+  userArea.innerHTML = `👤 ${user.username} <button class='danger' onclick='logout()'>登出</button>`;
+}
+
+async function checkLogin(){
+  const token = localStorage.getItem("token");
+  if(!token){ showLogin(); return; }
+
+  const r = await fetch(API+"/api/me",{
+    headers:{ Authorization:"Bearer "+token }
+  });
+  const d = await r.json();
+  if(d.error){ showLogin(); return; }
+  showChat(d);
+}
+
+function logout(){
+  const token = localStorage.getItem("token");
+  fetch(API+"/api/logout",{method:"POST",headers:{Authorization:"Bearer "+token}})
+  .finally(()=>{
+    localStorage.removeItem("token");
+    location.reload();
+  });
+}
+
+// 聊天功能
 let currentTicket = null;
 let timer = null;
 
@@ -116,9 +135,13 @@ async function sendMsg(){
   const txt = document.getElementById("msgInput");
   const v = txt.value.trim();
   if(!v || !currentTicket) return;
+  const token = localStorage.getItem("token");
   await fetch(API+"/api/chat/send",{
     method:"POST",
-    headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},
+    headers:{
+      "Content-Type":"application/json",
+      Authorization:"Bearer "+token
+    },
     body:JSON.stringify({ticket_code:currentTicket, content:v})
   });
   txt.value="";
