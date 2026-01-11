@@ -50,9 +50,9 @@ header{
 .main{flex:1;padding:20px;}
 .card{background:rgba(10,40,42,.9);border-radius:18px;padding:16px;}
 #messages{height:55vh;overflow-y:auto;background:#0b2e31;border-radius:12px;padding:12px;margin:10px 0;}
-.msg{margin:6px 0;font-size:14px;display:flex;gap:6px;align-items:center;}
+.msg{margin:6px 0;font-size:14px;display:flex;gap:6px;align-items:flex-start;}
 .site{color:#9af2f4;} .dc{color:#ffd38c;}
-.tag{font-size:12px;padding:2px 6px;border-radius:6px;}
+.tag{font-size:12px;padding:2px 6px;border-radius:6px;min-width:48px;text-align:center;flex-shrink:0;}
 .tag.admin{background:#d9534f;}
 .tag.artist{background:#4fd29a;}
 .tag.client{background:#4fb5d2;}
@@ -169,6 +169,7 @@ button.danger{background:linear-gradient(135deg,#e86a6a,#c73737);color:#fff;}
 const API="https://api.dreamlight.site";
 let currentTicket=null,timer=null,lastId=0,seenIds=new Set();
 let confirmCallback=null;
+let userMap = {};
 
 const loginBox=document.getElementById("loginBox");
 const chatLayout=document.getElementById("chatLayout");
@@ -247,6 +248,33 @@ function roleTag(r){
   return`<span class="tag client">委託人</span>`;
 }
 
+function renderMentions(text){
+  return text.replace(/<@(\d+)>/g, (m,id)=>{
+    return userMap[id] ? `@${userMap[id]}` : m;
+  });
+}
+  
+async function loadUserMap(){
+  const r = await fetch(API + "/api/artists");
+  const list = await r.json();
+  userMap = {};
+  list.forEach(u=>{
+    userMap[String(u.id)] = u.name;
+  });
+}
+
+async function checkLogin(){
+  const token=localStorage.getItem("token");
+  if(!token){loginBox.style.display="flex";chatLayout.style.display="none";return;}
+  const r=await fetch(API+"/api/me",{headers:{Authorization:"Bearer "+token}});
+  const d=await r.json();
+  if(d.error){loginBox.style.display="flex";chatLayout.style.display="none";return;}
+  loginBox.style.display="none";chatLayout.style.display="flex";
+  userArea.innerHTML=`👤 ${d.username} <button class="danger" onclick="logout()">登出</button>`;
+  await loadUserMap();        // ← 這行加這裡
+  loadTicketList();
+}
+  
 async function loadChat(code){
   if(currentTicket===code)return;
   currentTicket=code;lastId=0;seenIds.clear();
@@ -262,7 +290,7 @@ async function refreshChat(){
     if(seenIds.has(m.id))return;seenIds.add(m.id);
     const d=document.createElement("div");
     d.className="msg "+(m.from_site?"site":"dc");
-    d.innerHTML=`${roleTag(m.role)} <b>${m.username}</b>：${m.content}`;
+    d.innerHTML=`${roleTag(m.role)} <b>${m.username}</b>：${renderMentions(m.content)}`;
     messages.appendChild(d);lastId=Math.max(lastId,m.id);
   });
   if(rows.length)messages.scrollTop=messages.scrollHeight;
