@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <title>登入成功</title>
+</head>
+<body>
+  <h1>登入成功</h1>
+  <div id="info"></div>
+
+  <script>
+    const token = new URLSearchParams(location.search).get("token");
+    if (!token) {
+      document.getElementById("info").innerText = "沒有收到 token";
+    } else {
+      localStorage.setItem("token", token);
+      document.getElementById("info").innerText = "Token 已儲存";
+      console.log("JWT:", token);
+    }
+  </script>
+</body>
+</html>
