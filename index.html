@@ -72,7 +72,7 @@ button.danger{background:linear-gradient(135deg,#e86a6a,#c73737);color:#fff;}
   <div id="userArea"></div>
 </header>
 
-<div id="loginBox" style="display:none;">
+<div id="loginBox">
   <div class="loginGlow"></div>
   <div class="loginCard">
     <h2>登入星樹工坊</h2>
@@ -340,7 +340,9 @@ async function submitCreateTicket(){
   loadTicketList();
 }
 
-document.addEventListener("DOMContentLoaded",checkLogin);
+window.onload = ()=>{
+  checkLogin();
+};
   
 </script>
 </body>
