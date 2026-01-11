@@ -13,9 +13,13 @@ button.danger{background:linear-gradient(135deg,#d44,#f66);}
 #loginBox,#chatBox{display:none;padding:20px;}
 .card{background:#14182a;border-radius:14px;padding:16px;box-shadow:0 0 20px #0006;}
 #messages{height:55vh;overflow-y:auto;background:#0c1020;border-radius:10px;padding:12px;margin:10px 0;}
-.msg{margin:6px 0;font-size:14px;}
+.msg{margin:6px 0;font-size:14px;display:flex;gap:6px;align-items:center;}
 .site{color:#7cf;}
 .dc{color:#fc7;}
+.tag{font-size:12px;padding:2px 6px;border-radius:6px;}
+.tag.admin{background:#c33;}
+.tag.artist{background:#3a7;}
+.tag.client{background:#369;}
 #sendBar{display:flex;gap:8px;}
 input,textarea{flex:1;background:#0c1020;border:none;color:#fff;padding:10px;border-radius:8px;}
 </style>
@@ -69,9 +73,7 @@ const loginBox=document.getElementById("loginBox");
 const chatBox=document.getElementById("chatBox");
 const userArea=document.getElementById("userArea");
 
-function showLogin(){
-  loginBox.style.display="block";chatBox.style.display="none";userArea.innerHTML="";
-}
+function showLogin(){loginBox.style.display="block";chatBox.style.display="none";userArea.innerHTML="";}
 function showChat(user){
   loginBox.style.display="none";chatBox.style.display="block";
   userArea.innerHTML=`👤 ${user.username} <button class='danger' onclick='logout()'>登出</button>`;
@@ -100,10 +102,16 @@ async function loadChat(){
   lastId=0;
   seenIds.clear();
   document.getElementById("messages").innerHTML="";
-
   await refreshChat();
+
   if(timer){clearInterval(timer);timer=null;}
   timer=setInterval(refreshChat,3000);
+}
+
+function roleTag(role){
+  if(role==="admin") return `<span class="tag admin">管理員</span>`;
+  if(role==="artist") return `<span class="tag artist">繪師</span>`;
+  return `<span class="tag client">委託人</span>`;
 }
 
 async function refreshChat(){
@@ -118,7 +126,10 @@ async function refreshChat(){
 
     const div=document.createElement("div");
     div.className="msg "+(m.from_site?"site":"dc");
-    div.textContent=`[${m.username}] ${m.content}`;
+    div.innerHTML = `
+      ${roleTag(m.role)}
+      <strong>${m.username}</strong>：${m.content}
+    `;
     box.appendChild(div);
     lastId=Math.max(lastId,m.id);
   }
@@ -134,7 +145,7 @@ async function sendMsg(){
   const box=document.getElementById("messages");
   const div=document.createElement("div");
   div.className="msg site";
-  div.textContent=`[我] ${v}`;
+  div.innerHTML=`<span class="tag client">我</span><strong>我</strong>：${v}`;
   box.appendChild(div);
   box.scrollTop=box.scrollHeight;
   txt.value="";
