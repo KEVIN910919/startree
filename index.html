@@ -5,26 +5,100 @@
 <title>星樹工坊｜工單聊天室</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-body{margin:0;font-family:system-ui;background:radial-gradient(circle at top,#1b1f33,#0b0e16);color:#fff;}
-header{padding:14px 20px;background:linear-gradient(90deg,#1b2140,#101425);display:flex;justify-content:space-between;align-items:center;}
+body{
+  margin:0;
+  font-family:system-ui;
+  background:radial-gradient(circle at top,#45bfc2,#31999c,#1b6e73);
+  color:#fff;
+}
+header{
+  padding:14px 20px;
+  background:linear-gradient(90deg,#2fa3a6,#1f6f73);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 2px 12px #0006;
+}
 .layout{display:flex;height:calc(100vh - 60px);}
-.sidebar{width:240px;background:#0e1325;padding:10px;overflow-y:auto;}
-.ticket{padding:10px;border-radius:8px;margin-bottom:6px;cursor:pointer;background:#14182a;}
-.ticket.active{background:#2a3366;}
+.sidebar{
+  width:240px;
+  background:#0f3f43;
+  padding:10px;
+  overflow-y:auto;
+  box-shadow:inset -1px 0 0 #0006;
+}
+.ticket{
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:6px;
+  cursor:pointer;
+  background:#145a60;
+  transition:.15s;
+}
+.ticket:hover{filter:brightness(1.1);}
+.ticket.active{
+  background:linear-gradient(135deg,#4fd2d5,#31999c);
+  color:#08383b;
+  font-weight:600;
+}
 .main{flex:1;padding:20px;}
-.card{background:#14182a;border-radius:14px;padding:16px;}
-#messages{height:55vh;overflow-y:auto;background:#0c1020;border-radius:10px;padding:12px;margin:10px 0;}
-.msg{margin:6px 0;font-size:14px;display:flex;gap:6px;}
-.site{color:#7cf;}
-.dc{color:#fc7;}
-.tag{font-size:12px;padding:2px 6px;border-radius:6px;}
-.tag.admin{background:#c33;}
-.tag.artist{background:#3a7;}
-.tag.client{background:#369;}
+.card{
+  background:rgba(10,40,42,.9);
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 0 25px #0007;
+}
+#messages{
+  height:55vh;
+  overflow-y:auto;
+  background:#0b2e31;
+  border-radius:12px;
+  padding:12px;
+  margin:10px 0;
+}
+.msg{
+  margin:6px 0;
+  font-size:14px;
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+.site{color:#9af2f4;}
+.dc{color:#ffd38c;}
+.tag{
+  font-size:12px;
+  padding:2px 6px;
+  border-radius:6px;
+}
+.tag.admin{background:#d9534f;}
+.tag.artist{background:#4fd29a;}
+.tag.client{background:#4fb5d2;}
+
 #sendBar{display:flex;gap:8px;}
-textarea{flex:1;background:#0c1020;border:none;color:#fff;padding:10px;border-radius:8px;}
-button{background:linear-gradient(135deg,#6a7cff,#9aa7ff);border:none;color:#fff;padding:10px 14px;border-radius:8px;cursor:pointer;}
-button.danger{background:linear-gradient(135deg,#d44,#f66);}
+textarea{
+  flex:1;
+  background:#0b2e31;
+  border:none;
+  color:#fff;
+  padding:10px;
+  border-radius:10px;
+}
+textarea:focus{outline:2px solid #4fd2d5;}
+
+button{
+  background:linear-gradient(135deg,#4fd2d5,#31999c);
+  border:none;
+  color:#053436;
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+}
+button:hover{filter:brightness(1.1);}
+button.danger{
+  background:linear-gradient(135deg,#e86a6a,#c73737);
+  color:#fff;
+}
 .actions{display:flex;gap:8px;margin:8px 0;}
 .locked{opacity:.5;pointer-events:none;}
 </style>
@@ -66,7 +140,6 @@ button.danger{background:linear-gradient(135deg,#d44,#f66);}
 </div>
 
 <script>
-
 function login(){
   window.open(API+"/auth/discord","dcLogin","width=500,height=700");
 }
@@ -134,10 +207,7 @@ async function loadTicketList(){
     div.textContent = t.ticket_code;
     div.onclick = ()=>selectTicket(t.ticket_code);
     ticketList.appendChild(div);
-
-    if(i === 0){
-      selectTicket(t.ticket_code);
-    }
+    if(i === 0) selectTicket(t.ticket_code);
   });
 }
 
@@ -169,7 +239,6 @@ async function loadChat(code){
 async function refreshChat(){
   if(!currentTicket)return;
   await checkTicketStatus();
-
   const r=await fetch(API+`/api/chat/${currentTicket}?after=${lastId}`);
   const rows=await r.json();
   rows.forEach(m=>{
