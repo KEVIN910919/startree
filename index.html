@@ -209,16 +209,6 @@ window.addEventListener("message",(e)=>{
   if(e.data?.token){localStorage.setItem("token",e.data.token);checkLogin();}
 });
 
-async function checkLogin(){
-  const token=localStorage.getItem("token");
-  if(!token){loginBox.style.display="flex";chatLayout.style.display="none";return;}
-  const r=await fetch(API+"/api/me",{headers:{Authorization:"Bearer "+token}});
-  const d=await r.json();
-  if(d.error){loginBox.style.display="flex";chatLayout.style.display="none";return;}
-  loginBox.style.display="none";chatLayout.style.display="flex";
-  userArea.innerHTML=`👤 ${d.username} <button class="danger" onclick="logout()">登出</button>`;
-  loadTicketList();
-}
 function logout(){localStorage.removeItem("token");location.reload();}
 
 async function loadTicketList(selectCode=null){
