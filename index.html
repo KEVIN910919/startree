@@ -102,16 +102,45 @@ button.danger{background:linear-gradient(135deg,#e86a6a,#c73737);color:#fff;}
     height:auto;
   }
 
+  @media (max-width: 768px){
+
+  html, body{
+    overflow-x: hidden;   /* 全站禁止橫向滑動 */
+  }
+
+  .layout{
+    flex-direction:column;
+    width:100%;
+  }
+
   .sidebar{
     width:100%;
-    max-height:180px;
-    overflow-x:auto;
-    overflow-y:hidden;
     display:flex;
-    flex-direction:row;
-    gap:8px;
+    flex-direction:column;   /* 改回直向 */
+    gap:6px;
     padding:8px;
+    overflow:visible;        /* 不給橫向卷軸 */
   }
+
+  #ticketList{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .ticket{
+    width:100%;
+    min-width:0;             /* 取消最小寬 */
+    white-space:normal;      /* 可自動換行 */
+  }
+
+  /* 建立委託按鈕也滿版但不爆寬 */
+  .sidebar > button{
+    width:100% !important;
+    box-sizing:border-box;
+  }
+
+}
 
   .sidebar h3,
   .sidebar button{
