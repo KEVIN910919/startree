@@ -2,17 +2,14 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
-  <title>測試 Discord 登入</title>
+  <title>星樹工坊登入</title>
 </head>
 <body>
-  <h1>Discord OAuth 測試</h1>
-  <button id="login">使用 Discord 登入</button>
+  <h1>星樹工坊登入</h1>
 
-  <script>
-    document.getElementById("login").onclick = () => {
-      // 一定要跳出 iframe
-      window.top.location.href = "https://api.dreamlight.site/auth/discord";
-    };
-  </script>
+  <a href="https://api.dreamlight.site/auth/discord" target="_top">
+    <button>使用 Discord 登入</button>
+  </a>
+
 </body>
 </html>
