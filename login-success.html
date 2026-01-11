@@ -23,10 +23,7 @@
         dbg("找到 opener，準備傳送 postMessage");
         window.opener.postMessage({ token }, "*");
         dbg("已送出 postMessage");
-        setTimeout(() => {
-          dbg("嘗試關閉視窗");
-          window.close();
-        }, 300);
+        dbg("⚠️ 暫停自動關閉，請手動關閉視窗");
       }else{
         dbg("❌ 找不到原視窗 window.opener");
       }
