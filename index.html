@@ -10,6 +10,7 @@ body{
   font-family:system-ui;
   background:radial-gradient(circle at top,#45bfc2,#31999c,#1b6e73);
   color:#fff;
+  min-height:100vh;
 }
 header{
   padding:14px 20px;
@@ -19,110 +20,70 @@ header{
   align-items:center;
   box-shadow:0 2px 12px #0006;
 }
-.layout{display:flex;height:calc(100vh - 60px);}
-.sidebar{
-  width:240px;
-  background:#0f3f43;
-  padding:10px;
-  overflow-y:auto;
-  box-shadow:inset -1px 0 0 #0006;
-}
-.ticket{
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:6px;
-  cursor:pointer;
-  background:#145a60;
-  transition:.15s;
-}
-.ticket:hover{filter:brightness(1.1);}
-.ticket.active{
-  background:linear-gradient(135deg,#4fd2d5,#31999c);
-  color:#08383b;
-  font-weight:600;
-}
-.main{flex:1;padding:20px;}
-.card{
-  background:rgba(10,40,42,.9);
-  border-radius:18px;
-  padding:16px;
-  box-shadow:0 0 25px #0007;
-}
-#messages{
-  height:55vh;
-  overflow-y:auto;
-  background:#0b2e31;
-  border-radius:12px;
-  padding:12px;
-  margin:10px 0;
-}
-.msg{
-  margin:6px 0;
-  font-size:14px;
-  display:flex;
-  gap:6px;
-  align-items:center;
-}
-.site{color:#9af2f4;}
-.dc{color:#ffd38c;}
-.tag{
-  font-size:12px;
-  padding:2px 6px;
-  border-radius:6px;
-}
-.tag.admin{background:#d9534f;}
-.tag.artist{background:#4fd29a;}
-.tag.client{background:#4fb5d2;}
 
-#sendBar{display:flex;gap:8px;}
-textarea{
-  flex:1;
-  background:#0b2e31;
-  border:none;
-  color:#fff;
-  padding:10px;
-  border-radius:10px;
-}
-textarea:focus{outline:2px solid #4fd2d5;}
-
-button{
-  background:linear-gradient(135deg,#4fd2d5,#31999c);
-  border:none;
-  color:#053436;
-  padding:10px 14px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:600;
-}
-button:hover{filter:brightness(1.1);}
-button.danger{
-  background:linear-gradient(135deg,#e86a6a,#c73737);
-  color:#fff;
-}
-.actions{display:flex;gap:8px;margin:8px 0;}
-.locked{opacity:.5;pointer-events:none;}
-
-#confirmMask{
+/* ===== 登入畫面 ===== */
+#loginBox{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.6);
   display:flex;
   align-items:center;
   justify-content:center;
-  z-index:9999;
+  background:rgba(0,0,0,.25);
+  backdrop-filter:blur(2px);
+  z-index:1000;
 }
-.confirmBox{
-  background:#0b3f42;
-  padding:20px;
-  border-radius:14px;
-  width:280px;
+.loginGlow{
+  position:absolute;
+  width:500px;height:500px;
+  background:radial-gradient(circle,#7fffd4 0%,transparent 70%);
+  filter:blur(80px);
+  top:-200px;right:-200px;
+  opacity:.5;
+}
+.loginCard{
+  position:relative;
+  background:rgba(10,40,42,.95);
+  border-radius:20px;
+  padding:42px 48px;
+  width:420px;
+  max-width:90%;
   text-align:center;
-  box-shadow:0 0 30px #0009;
+  box-shadow:0 30px 80px rgba(0,0,0,.45);
 }
+.loginCard h2{margin:0 0 10px;font-size:26px;}
+.loginCard p{opacity:.85;line-height:1.6;margin-bottom:28px;}
+
+/* ===== 原本聊天室樣式保留 ===== */
+.layout{display:flex;height:calc(100vh - 60px);}
+.sidebar{width:240px;background:#0f3f43;padding:10px;overflow-y:auto;box-shadow:inset -1px 0 0 #0006;}
+.ticket{padding:10px;border-radius:10px;margin-bottom:6px;cursor:pointer;background:#145a60;transition:.15s;}
+.ticket:hover{filter:brightness(1.1);}
+.ticket.active{background:linear-gradient(135deg,#4fd2d5,#31999c);color:#08383b;font-weight:600;}
+.main{flex:1;padding:20px;}
+.card{background:rgba(10,40,42,.9);border-radius:18px;padding:16px;box-shadow:0 0 25px #0007;}
+#messages{height:55vh;overflow-y:auto;background:#0b2e31;border-radius:12px;padding:12px;margin:10px 0;}
+.msg{margin:6px 0;font-size:14px;display:flex;gap:6px;align-items:center;}
+.site{color:#9af2f4;}
+.dc{color:#ffd38c;}
+.tag{font-size:12px;padding:2px 6px;border-radius:6px;}
+.tag.admin{background:#d9534f;}
+.tag.artist{background:#4fd29a;}
+.tag.client{background:#4fb5d2;}
+#sendBar{display:flex;gap:8px;}
+textarea{flex:1;background:#0b2e31;border:none;color:#fff;padding:10px;border-radius:10px;}
+textarea:focus{outline:2px solid #4fd2d5;}
+button{background:linear-gradient(135deg,#4fd2d5,#31999c);border:none;color:#053436;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600;}
+button:hover{filter:brightness(1.1);}
+button.danger{background:linear-gradient(135deg,#e86a6a,#c73737);color:#fff;}
+.actions{display:flex;gap:8px;margin:8px 0;}
+.locked{opacity:.5;pointer-events:none;}
+
+/* 確認視窗樣式原樣保留 */
+#confirmMask{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.confirmBox{background:#0b3f42;padding:20px;border-radius:14px;width:280px;text-align:center;box-shadow:0 0 30px #0009;}
 .confirmBox h3{margin:0 0 10px;}
 .confirmBtns{display:flex;gap:10px;justify-content:center;margin-top:14px;}
 .confirmBtns button{min-width:90px;}
-  
 </style>
 </head>
 <body>
@@ -131,10 +92,12 @@ button.danger{
   <div id="userArea"></div>
 </header>
 
-<div id="loginBox" style="display:none; padding:40px;">
-  <div class="card" style="max-width:420px;margin:auto;text-align:center;">
+<!-- 登入畫面（重新設計） -->
+<div id="loginBox" style="display:none;">
+  <div class="loginGlow"></div>
+  <div class="loginCard">
     <h2>登入星樹工坊</h2>
-    <p>請使用 Discord 帳號登入以同步工單與聊天。</p>
+    <p>請使用 Discord 帳號登入，以同步工單與聊天系統。</p>
     <button onclick="login()">使用 Discord 登入</button>
   </div>
 </div>
