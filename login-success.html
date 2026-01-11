@@ -1,27 +1,22 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <title>登入成功</title>
+  <meta charset="UTF-8">
+  <title>登入完成</title>
 </head>
 <body>
-  <h1>登入成功</h1>
-  <div id="info">處理中...</div>
-
+  <p>授權完成，請稍候…</p>
   <script>
     const token = new URLSearchParams(location.search).get("token");
-
-    if (!token) {
-      document.getElementById("info").innerText = "沒有收到 token";
-    } else {
-      localStorage.setItem("token", token);
-      document.getElementById("info").innerText = "登入完成，正在返回首頁...";
-      console.log("JWT:", token);
-
-      // 🔁 跳回主聊天室頁
-      setTimeout(() => {
-        location.href = "index.html";
-      }, 1000);
+    if(token){
+      if(window.opener){
+        window.opener.postMessage({ token }, "*");
+        window.close();
+      }else{
+        document.body.innerText = "找不到原視窗";
+      }
+    }else{
+      document.body.innerText = "沒有收到 token";
     }
   </script>
 </body>
