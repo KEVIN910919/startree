@@ -506,9 +506,21 @@ document.getElementById("imgInput").addEventListener("change", async e=>{
   let file = e.target.files[0];
   if(!file || !currentTicket || uploading) return;
 
+  uploading = true;
+
+  const bar = document.getElementById("uploadBar");
+  const prog = document.getElementById("uploadProg");
+  const text = document.getElementById("uploadText");
+
+  bar.style.display = "block";
+  prog.style.width = "0%";
+  text.textContent = "準備上傳…";
+
   // 1. 大小限制
   if(file.size > 8*1024*1024){
     alert("圖片太大（上限 8MB）");
+    bar.style.display = "none";
+    uploading = false;
     return;
   }
 
@@ -518,21 +530,13 @@ document.getElementById("imgInput").addEventListener("change", async e=>{
     file = await compressImage(file);
   }
 
-  uploading = true;
-
+  // 3. 壓縮完成後才建立 FormData
   const token = localStorage.getItem("token");
   const fd = new FormData();
   fd.append("ticket_code", currentTicket);
   fd.append("image", file);
 
-  const bar = document.getElementById("uploadBar");
-  const prog = document.getElementById("uploadProg");
-  const text = document.getElementById("uploadText");
-
-  bar.style.display = "block";
-  prog.style.width = "0%";
-  text.textContent = "上傳中…";
-
+  // 4. 開始上傳
   const xhr = new XMLHttpRequest();
   xhr.open("POST", API+"/api/chat/send-image");
   xhr.setRequestHeader("Authorization","Bearer "+token);
