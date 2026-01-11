@@ -1,20 +1,18 @@
-<!-- login-success.html -->
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
-  <title>Login Success</title>
+  <title>測試 Discord 登入</title>
 </head>
 <body>
-  <h1>登入成功</h1>
+  <h1>Discord OAuth 測試</h1>
+  <button id="login">使用 Discord 登入</button>
+
   <script>
-    const token = new URLSearchParams(location.search).get("token");
-    if (token) {
-      localStorage.setItem("token", token);
-      document.body.innerHTML += "<p>Token 已儲存</p>";
-    } else {
-      document.body.innerHTML += "<p>沒有收到 Token</p>";
-    }
+    document.getElementById("login").onclick = () => {
+      // 一定要跳出 iframe
+      window.top.location.href = "https://api.dreamlight.site/auth/discord/callback";
+    };
   </script>
 </body>
 </html>
