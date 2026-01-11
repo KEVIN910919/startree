@@ -1,32 +1,45 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <title>登入完成</title>
+<meta charset="UTF-8">
+<title>星樹工坊｜登入完成</title>
+<style>
+body{
+  margin:0;font-family:system-ui;
+  background:radial-gradient(circle,#1b2140,#0b0e16);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  height:100vh;
+}
+.card{
+  background:#14182a;border-radius:16px;
+  padding:24px;box-shadow:0 0 30px #0008;
+  text-align:center;max-width:400px;
+}
+</style>
 </head>
-<body style="background:red;color:white;font-size:24px;">
-  <h1>這是新版本測試頁</h1>
+<body>
+<div class="card">
+  <h2>🌟 授權完成</h2>
+  <p>正在回傳登入資訊給星樹工坊…</p>
   <pre id="debug"></pre>
+</div>
 
-  <script>
-    const dbg = (t) => {
-      document.getElementById("debug").textContent += t + "\n";
-    };
+<script>
+const dbg=t=>document.getElementById("debug").textContent+=t+"\n";
+const token=new URLSearchParams(location.search).get("token");
+dbg("收到 token = "+token);
 
-    const token = new URLSearchParams(location.search).get("token");
-    dbg("收到 token = " + token);
-
-    if(token){
-      if(window.opener){
-        dbg("找到 opener，送出 postMessage");
-        window.opener.postMessage({ token }, "*");
-        dbg("已送出，不自動關閉");
-      }else{
-        dbg("❌ 找不到 opener");
-      }
-    }else{
-      dbg("❌ 沒有 token");
-    }
-  </script>
+if(token){
+  if(window.opener){
+    window.opener.postMessage({token},"*");
+    dbg("已傳送給原視窗");
+    setTimeout(()=>window.close(),800);
+  }else{
+    dbg("找不到 opener，請手動關閉");
+  }
+}else{
+  dbg("沒有收到 token");
+}
+</script>
 </body>
 </html>
