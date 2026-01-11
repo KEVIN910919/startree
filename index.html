@@ -84,6 +84,9 @@ button.danger{background:linear-gradient(135deg,#e86a6a,#c73737);color:#fff;}
 <div class="layout" id="chatLayout" style="display:none;">
   <div class="sidebar">
     <h3>📁 我的工單</h3>
+    <button style="width:100%;margin:6px 0" onclick="startCreateTicket()">
+      ➕ 建立委託工單
+    </button>
     <div id="ticketList"></div>
   </div>
   <div class="main">
@@ -240,6 +243,74 @@ function closeTicket(){
   });
 }
 
+async function startCreateTicket(){
+  const token = localStorage.getItem("token");
+  const r = await fetch(API+"/api/check-guild",{
+    headers:{Authorization:"Bearer "+token}
+  });
+  const d = await r.json();
+
+  if(!d.in_guild){
+    alert("請先加入星樹工坊 Discord 伺服器，才能建立委託。");
+    return;
+  }
+  openCreateForm();
+}
+
+async function openCreateForm(){
+  const r = await fetch(API+"/api/artists");
+  const artists = await r.json();
+
+  if(!artists.length){
+    alert("目前沒有可用繪師");
+    return;
+  }
+
+  let list = "請選擇繪師：\n";
+  artists.forEach((a,i)=>{
+    list += `${i+1}. ${a.name}\n`;
+  });
+
+  const idx = prompt(list + "\n輸入數字選擇：");
+  const artist = artists[idx-1];
+  if(!artist) return;
+
+  const item = prompt("委託項目：");
+  if(!item) return;
+  const method = prompt("委託畫式：");
+  const preference = prompt("偏好風格：");
+  const budget = prompt("預算：");
+  const usage = prompt("用途：");
+
+  submitCreate({
+    artist_id: artist.id,
+    item, method, preference, budget, usage
+  });
+}
+
+async function submitCreate(data){
+  const token = localStorage.getItem("token");
+  const r = await fetch(API+"/api/ticket/create",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      Authorization:"Bearer "+token
+    },
+    body: JSON.stringify(data)
+  });
+  const d = await r.json();
+
+  if(d.error==="not_in_guild"){
+    alert("你不在 Discord 伺服器中，無法建立委託。");
+    return;
+  }
+
+  if(d.ok){
+    alert("委託工單已建立，請到 Discord 查看！");
+    loadTicketList();
+  }
+}
+  
 document.addEventListener("DOMContentLoaded",checkLogin);
 </script>
 </body>
