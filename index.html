@@ -334,8 +334,8 @@ async function loadArtists(){
 
   list.forEach(a=>{
     const o = document.createElement("option");
-    o.value = a.discord_user_id;      // 正確欄位
-    o.textContent = a.display_name;   // 正確欄位
+    o.value = a.id;      // ✅ 對應後端 id
+    o.textContent = a.name;  // ✅ 對應後端 name
     sel.appendChild(o);
   });
 
