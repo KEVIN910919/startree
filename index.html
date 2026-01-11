@@ -87,17 +87,34 @@ function logout(){
 
 // ===== 工單列表 =====
 async function loadTicketList(){
-  const token=localStorage.getItem("token");
-  const r=await fetch(API+"/api/my-tickets",{headers:{Authorization:"Bearer "+token}});
-  const rows=await r.json();
-  ticketList.innerHTML="";
+  const token = localStorage.getItem("token");
+  const r = await fetch(API+"/api/my-tickets", {
+    headers:{ Authorization:"Bearer "+token }
+  });
+  const rows = await r.json();
+
+  ticketList.innerHTML = "";
+
+  if(!rows.length){
+    const tip = document.createElement("div");
+    tip.style.opacity = "0.7";
+    tip.style.fontSize = "14px";
+    tip.style.padding = "8px";
+    tip.textContent = "目前沒有進行中的工單";
+    ticketList.appendChild(tip);
+    return;
+  }
+
   rows.forEach((t,i)=>{
-    const div=document.createElement("div");
-    div.className="ticket";
-    div.textContent=t.ticket_code;
-    div.onclick=()=>selectTicket(t.ticket_code);
+    const div = document.createElement("div");
+    div.className = "ticket";
+    div.textContent = t.ticket_code;
+    div.onclick = ()=>selectTicket(t.ticket_code);
     ticketList.appendChild(div);
-    if(i===0)selectTicket(t.ticket_code);
+
+    if(i === 0){
+      selectTicket(t.ticket_code);
+    }
   });
 }
 
