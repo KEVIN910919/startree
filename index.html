@@ -7,10 +7,25 @@
 <style>
 body{margin:0;font-family:system-ui;background:radial-gradient(circle at top,#1b1f33,#0b0e16);color:#fff;}
 header{padding:14px 20px;background:linear-gradient(90deg,#1b2140,#101425);display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 10px #0008;}
+
+.layout{display:flex;height:calc(100vh - 60px);}
+.sidebar{
+  width:240px;background:#0e1325;border-right:1px solid #000;
+  padding:10px;overflow-y:auto;
+}
+.ticket{
+  padding:10px;border-radius:8px;margin-bottom:6px;
+  cursor:pointer;background:#14182a;
+}
+.ticket:hover{filter:brightness(1.1);}
+.ticket.active{background:#2a3366;}
+
+.main{flex:1;padding:20px;overflow:hidden;}
+
 button{background:linear-gradient(135deg,#6a7cff,#9aa7ff);border:none;color:#fff;padding:10px 14px;border-radius:8px;cursor:pointer;}
 button:hover{filter:brightness(1.1);}
 button.danger{background:linear-gradient(135deg,#d44,#f66);}
-#loginBox,#chatBox{display:none;padding:20px;}
+
 .card{background:#14182a;border-radius:14px;padding:16px;box-shadow:0 0 20px #0006;}
 #messages{height:55vh;overflow-y:auto;background:#0c1020;border-radius:10px;padding:12px;margin:10px 0;}
 .msg{margin:6px 0;font-size:14px;display:flex;gap:6px;align-items:center;}
@@ -20,8 +35,12 @@ button.danger{background:linear-gradient(135deg,#d44,#f66);}
 .tag.admin{background:#c33;}
 .tag.artist{background:#3a7;}
 .tag.client{background:#369;}
+
 #sendBar{display:flex;gap:8px;}
 input,textarea{flex:1;background:#0c1020;border:none;color:#fff;padding:10px;border-radius:8px;}
+.actions{display:flex;gap:8px;margin:8px 0;}
+
+#loginBox{padding:40px;}
 </style>
 </head>
 <body>
@@ -30,7 +49,7 @@ input,textarea{flex:1;background:#0c1020;border:none;color:#fff;padding:10px;bor
   <div id="userArea"></div>
 </header>
 
-<div id="loginBox">
+<div id="loginBox" style="display:none;">
   <div class="card">
     <h2>登入星樹工坊</h2>
     <p>請使用 Discord 帳號登入以同步工單與聊天。</p>
@@ -38,46 +57,59 @@ input,textarea{flex:1;background:#0c1020;border:none;color:#fff;padding:10px;bor
   </div>
 </div>
 
-<div id="chatBox">
-  <div class="card">
-    <div style="margin-bottom:10px;">
-      工單代碼：
-      <input id="ticketInput" placeholder="COM-20260101010101" />
-      <button onclick="loadChat()">載入聊天</button>
-    </div>
-    <div id="messages"></div>
-    <div id="sendBar">
-      <textarea id="msgInput" rows="2" placeholder="輸入訊息…"></textarea>
-      <button onclick="sendMsg()">送出</button>
+<div class="layout" id="chatLayout" style="display:none;">
+  <!-- 左側工單欄 -->
+  <div class="sidebar">
+    <h3>📁 我的工單</h3>
+    <div id="ticketList"></div>
+  </div>
+
+  <!-- 右側聊天室 -->
+  <div class="main">
+    <div class="card">
+      <div id="ticketInfo"></div>
+
+      <div class="actions" id="ticketActions" style="display:none;">
+        <button class="danger" onclick="cancelTicket()">🛑 中止委託</button>
+        <button class="danger" onclick="closeTicket()">🔒 結單</button>
+      </div>
+
+      <div id="messages"></div>
+
+      <div id="sendBar">
+        <textarea id="msgInput" rows="2" placeholder="輸入訊息…"></textarea>
+        <button onclick="sendMsg()">送出</button>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
 const API="https://api.dreamlight.site";
-let loginWin=null,currentTicket=null,timer=null,lastId=0;
-let seenIds=new Set();
+let currentTicket=null,timer=null,lastId=0,seenIds=new Set();
 
 // ===== 登入 =====
 function login(){
-  loginWin=window.open(API+"/auth/discord","dcLogin","width=500,height=700");
+  window.open(API+"/auth/discord","dcLogin","width=500,height=700");
 }
 window.addEventListener("message",(e)=>{
-  if(!e.data||!e.data.token)return;
-  localStorage.setItem("token",e.data.token);
-  checkLogin();
+  if(e.data?.token){
+    localStorage.setItem("token",e.data.token);
+    checkLogin();
+  }
 });
 
-// ===== UI =====
-const loginBox=document.getElementById("loginBox");
-const chatBox=document.getElementById("chatBox");
-const userArea=document.getElementById("userArea");
-
-function showLogin(){loginBox.style.display="block";chatBox.style.display="none";userArea.innerHTML="";}
+function showLogin(){
+  loginBox.style.display="block";
+  chatLayout.style.display="none";
+  userArea.innerHTML="";
+}
 function showChat(user){
-  loginBox.style.display="none";chatBox.style.display="block";
+  loginBox.style.display="none";
+  chatLayout.style.display="flex";
   userArea.innerHTML=`👤 ${user.username} <button class='danger' onclick='logout()'>登出</button>`;
 }
+
 async function checkLogin(){
   const token=localStorage.getItem("token");
   if(!token){showLogin();return;}
@@ -85,76 +117,112 @@ async function checkLogin(){
   const d=await r.json();
   if(d.error){showLogin();return;}
   showChat(d);
+  loadTicketList();
 }
+
 function logout(){
   const token=localStorage.getItem("token");
   fetch(API+"/api/logout",{method:"POST",headers:{Authorization:"Bearer "+token}})
   .finally(()=>{localStorage.removeItem("token");location.reload();});
 }
 
-// ===== 聊天 =====
-async function loadChat(){
-  const code=document.getElementById("ticketInput").value.trim();
-  if(!code)return alert("請輸入工單代碼");
-  if(currentTicket===code)return;
-
-  currentTicket=code;
-  lastId=0;
-  seenIds.clear();
-  document.getElementById("messages").innerHTML="";
-  await refreshChat();
-
-  if(timer){clearInterval(timer);timer=null;}
-  timer=setInterval(refreshChat,3000);
+// ===== 載入工單清單 =====
+async function loadTicketList(){
+  const token=localStorage.getItem("token");
+  const r=await fetch(API+"/api/my-tickets",{headers:{Authorization:"Bearer "+token}});
+  const rows=await r.json();
+  const box=document.getElementById("ticketList");
+  box.innerHTML="";
+  if(!rows.length){
+    box.innerHTML="<p>沒有進行中的工單</p>";
+    return;
+  }
+  rows.forEach((t,i)=>{
+    const div=document.createElement("div");
+    div.className="ticket";
+    div.textContent=t.ticket_code;
+    div.onclick=()=>selectTicket(t.ticket_code);
+    box.appendChild(div);
+    if(i===0) selectTicket(t.ticket_code);
+  });
 }
 
+function selectTicket(code){
+  document.querySelectorAll(".ticket").forEach(d=>{
+    d.classList.toggle("active",d.textContent===code);
+  });
+  loadChat(code);
+}
+
+// ===== 聊天 =====
 function roleTag(role){
   if(role==="admin") return `<span class="tag admin">管理員</span>`;
   if(role==="artist") return `<span class="tag artist">繪師</span>`;
   return `<span class="tag client">委託人</span>`;
 }
 
+async function loadChat(code){
+  if(currentTicket===code)return;
+  currentTicket=code;
+  lastId=0;seenIds.clear();
+  messages.innerHTML="";
+  ticketInfo.innerHTML=`目前工單：<b>${code}</b>`;
+  ticketActions.style.display="flex";
+  await refreshChat();
+  if(timer)clearInterval(timer);
+  timer=setInterval(refreshChat,3000);
+}
+
 async function refreshChat(){
   if(!currentTicket)return;
   const r=await fetch(API+`/api/chat/${currentTicket}?after=${lastId}`);
   const rows=await r.json();
-  const box=document.getElementById("messages");
-
-  for(const m of rows){
-    if(seenIds.has(m.id))continue;
+  rows.forEach(m=>{
+    if(seenIds.has(m.id))return;
     seenIds.add(m.id);
-
     const div=document.createElement("div");
     div.className="msg "+(m.from_site?"site":"dc");
-    div.innerHTML = `
-      ${roleTag(m.role)}
-      <strong>${m.username}</strong>：${m.content}
-    `;
-    box.appendChild(div);
+    div.innerHTML=`${roleTag(m.role)} <b>${m.username}</b>：${m.content}`;
+    messages.appendChild(div);
     lastId=Math.max(lastId,m.id);
-  }
-  if(rows.length)box.scrollTop=box.scrollHeight;
+  });
+  if(rows.length)messages.scrollTop=messages.scrollHeight;
 }
 
+// ===== 發送 =====
 async function sendMsg(){
-  const txt=document.getElementById("msgInput");
-  const v=txt.value.trim();
+  const v=msgInput.value.trim();
   if(!v||!currentTicket)return;
   const token=localStorage.getItem("token");
-
-  const box=document.getElementById("messages");
-  const div=document.createElement("div");
-  div.className="msg site";
-  div.innerHTML=`<span class="tag client">我</span><strong>我</strong>：${v}`;
-  box.appendChild(div);
-  box.scrollTop=box.scrollHeight;
-  txt.value="";
-
+  msgInput.value="";
   await fetch(API+"/api/chat/send",{
     method:"POST",
     headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},
     body:JSON.stringify({ticket_code:currentTicket,content:v})
   });
+}
+
+// ===== 工單操作 =====
+async function cancelTicket(){
+  if(!confirm("確定要中止委託？"))return;
+  const token=localStorage.getItem("token");
+  await fetch(API+"/api/ticket/cancel",{
+    method:"POST",
+    headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},
+    body:JSON.stringify({ticket_code:currentTicket})
+  });
+  alert("已送出中止請求");
+}
+
+async function closeTicket(){
+  if(!confirm("確定要結單？"))return;
+  const token=localStorage.getItem("token");
+  await fetch(API+"/api/ticket/close",{
+    method:"POST",
+    headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},
+    body:JSON.stringify({ticket_code:currentTicket})
+  });
+  alert("已送出結單請求");
 }
 
 checkLogin();
