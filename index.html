@@ -20,70 +20,50 @@ header{
   align-items:center;
   box-shadow:0 2px 12px #0006;
 }
-
-/* ===== 登入畫面 ===== */
 #loginBox{
-  position:fixed;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  position:fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
   background:rgba(0,0,0,.25);
   backdrop-filter:blur(2px);
   z-index:1000;
 }
 .loginGlow{
-  position:absolute;
-  width:500px;height:500px;
+  position:absolute;width:500px;height:500px;
   background:radial-gradient(circle,#7fffd4 0%,transparent 70%);
   filter:blur(80px);
-  top:-200px;right:-200px;
-  opacity:.5;
+  top:-200px;right:-200px;opacity:.5;
 }
 .loginCard{
   position:relative;
   background:rgba(10,40,42,.95);
   border-radius:20px;
   padding:42px 48px;
-  width:420px;
-  max-width:90%;
+  width:420px;max-width:90%;
   text-align:center;
   box-shadow:0 30px 80px rgba(0,0,0,.45);
 }
-.loginCard h2{margin:0 0 10px;font-size:26px;}
-.loginCard p{opacity:.85;line-height:1.6;margin-bottom:28px;}
-
-/* ===== 原本聊天室樣式保留 ===== */
 .layout{display:flex;height:calc(100vh - 60px);}
-.sidebar{width:240px;background:#0f3f43;padding:10px;overflow-y:auto;box-shadow:inset -1px 0 0 #0006;}
-.ticket{padding:10px;border-radius:10px;margin-bottom:6px;cursor:pointer;background:#145a60;transition:.15s;}
-.ticket:hover{filter:brightness(1.1);}
+.sidebar{width:240px;background:#0f3f43;padding:10px;overflow-y:auto;}
+.ticket{padding:10px;border-radius:10px;margin-bottom:6px;cursor:pointer;background:#145a60;}
 .ticket.active{background:linear-gradient(135deg,#4fd2d5,#31999c);color:#08383b;font-weight:600;}
 .main{flex:1;padding:20px;}
-.card{background:rgba(10,40,42,.9);border-radius:18px;padding:16px;box-shadow:0 0 25px #0007;}
+.card{background:rgba(10,40,42,.9);border-radius:18px;padding:16px;}
 #messages{height:55vh;overflow-y:auto;background:#0b2e31;border-radius:12px;padding:12px;margin:10px 0;}
 .msg{margin:6px 0;font-size:14px;display:flex;gap:6px;align-items:center;}
-.site{color:#9af2f4;}
-.dc{color:#ffd38c;}
+.site{color:#9af2f4;} .dc{color:#ffd38c;}
 .tag{font-size:12px;padding:2px 6px;border-radius:6px;}
 .tag.admin{background:#d9534f;}
 .tag.artist{background:#4fd29a;}
 .tag.client{background:#4fb5d2;}
 #sendBar{display:flex;gap:8px;}
 textarea{flex:1;background:#0b2e31;border:none;color:#fff;padding:10px;border-radius:10px;}
-textarea:focus{outline:2px solid #4fd2d5;}
 button{background:linear-gradient(135deg,#4fd2d5,#31999c);border:none;color:#053436;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600;}
-button:hover{filter:brightness(1.1);}
 button.danger{background:linear-gradient(135deg,#e86a6a,#c73737);color:#fff;}
 .actions{display:flex;gap:8px;margin:8px 0;}
 .locked{opacity:.5;pointer-events:none;}
-
-/* 確認視窗樣式原樣保留 */
 #confirmMask{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;}
-.confirmBox{background:#0b3f42;padding:20px;border-radius:14px;width:280px;text-align:center;box-shadow:0 0 30px #0009;}
-.confirmBox h3{margin:0 0 10px;}
+.confirmBox{background:#0b3f42;padding:20px;border-radius:14px;width:280px;text-align:center;}
 .confirmBtns{display:flex;gap:10px;justify-content:center;margin-top:14px;}
-.confirmBtns button{min-width:90px;}
 </style>
 </head>
 <body>
@@ -92,7 +72,6 @@ button.danger{background:linear-gradient(135deg,#e86a6a,#c73737);color:#fff;}
   <div id="userArea"></div>
 </header>
 
-<!-- 登入畫面（重新設計） -->
 <div id="loginBox" style="display:none;">
   <div class="loginGlow"></div>
   <div class="loginCard">
@@ -101,17 +80,16 @@ button.danger{background:linear-gradient(135deg,#e86a6a,#c73737);color:#fff;}
     <button onclick="login()">使用 Discord 登入</button>
   </div>
 </div>
-  
+
 <div class="layout" id="chatLayout" style="display:none;">
   <div class="sidebar">
     <h3>📁 我的工單</h3>
     <div id="ticketList"></div>
   </div>
-
   <div class="main">
     <div class="card" id="chatCard">
       <div id="ticketInfo"></div>
-      <div class="actions" id="ticketActions">
+      <div class="actions">
         <button class="danger" onclick="cancelTicket()">🛑 中止委託</button>
         <button class="danger" onclick="closeTicket()">🔒 結單</button>
       </div>
@@ -124,10 +102,9 @@ button.danger{background:linear-gradient(135deg,#e86a6a,#c73737);color:#fff;}
   </div>
 </div>
 
-<!-- 自訂確認視窗 -->
 <div id="confirmMask" style="display:none;">
   <div class="confirmBox">
-    <h3 id="confirmTitle">確認操作</h3>
+    <h3>確認操作</h3>
     <p id="confirmText"></p>
     <div class="confirmBtns">
       <button id="confirmYes">確定</button>
@@ -135,208 +112,135 @@ button.danger{background:linear-gradient(135deg,#e86a6a,#c73737);color:#fff;}
     </div>
   </div>
 </div>
-  
+
 <script>
-function login(){
-  window.open(API+"/auth/discord","dcLogin","width=500,height=700");
-}
-  
 const API="https://api.dreamlight.site";
 let currentTicket=null,timer=null,lastId=0,seenIds=new Set();
+let confirmCallback=null;
 
-// ===== 登入 =====
+const loginBox=document.getElementById("loginBox");
+const chatLayout=document.getElementById("chatLayout");
+const userArea=document.getElementById("userArea");
+const ticketList=document.getElementById("ticketList");
+const messages=document.getElementById("messages");
+const ticketInfo=document.getElementById("ticketInfo");
+const chatCard=document.getElementById("chatCard");
+const msgInput=document.getElementById("msgInput");
+const sendBar=document.getElementById("sendBar");
+
+function login(){window.open(API+"/auth/discord","dcLogin","width=500,height=700");}
+
 window.addEventListener("message",(e)=>{
-  if(e.data?.token){
-    localStorage.setItem("token",e.data.token);
-    checkLogin();
-  }
+  if(e.data?.token){localStorage.setItem("token",e.data.token);checkLogin();}
 });
 
 async function checkLogin(){
   const token=localStorage.getItem("token");
-  if(!token){
-    loginBox.style.display="block";
-    chatLayout.style.display="none";
-    userArea.innerHTML="";
-    return;
-  }
+  if(!token){loginBox.style.display="flex";chatLayout.style.display="none";return;}
   const r=await fetch(API+"/api/me",{headers:{Authorization:"Bearer "+token}});
   const d=await r.json();
-  if(d.error){
-    loginBox.style.display="block";
-    chatLayout.style.display="none";
-    return;
-  }
-  loginBox.style.display="none";
-  chatLayout.style.display="flex";
+  if(d.error){loginBox.style.display="flex";chatLayout.style.display="none";return;}
+  loginBox.style.display="none";chatLayout.style.display="flex";
   userArea.innerHTML=`👤 ${d.username} <button class="danger" onclick="logout()">登出</button>`;
   loadTicketList();
 }
+function logout(){localStorage.removeItem("token");location.reload();}
 
-function logout(){
-  localStorage.removeItem("token");
-  location.reload();
-}
-
-// ===== 工單列表 =====
 async function loadTicketList(){
-  const token = localStorage.getItem("token");
-  const r = await fetch(API+"/api/my-tickets", {
-    headers:{ Authorization:"Bearer "+token }
-  });
-  const rows = await r.json();
-
-  ticketList.innerHTML = "";
-
-  if(!rows.length){
-    const tip = document.createElement("div");
-    tip.style.opacity = "0.7";
-    tip.style.fontSize = "14px";
-    tip.style.padding = "8px";
-    tip.textContent = "目前沒有進行中的工單";
-    ticketList.appendChild(tip);
-    return;
-  }
-
+  const token=localStorage.getItem("token");
+  const r=await fetch(API+"/api/my-tickets",{headers:{Authorization:"Bearer "+token}});
+  const rows=await r.json();ticketList.innerHTML="";
+  if(!rows.length){ticketList.innerHTML="<div style='opacity:.7;padding:8px'>目前沒有進行中的工單</div>";return;}
   rows.forEach((t,i)=>{
-    const div = document.createElement("div");
-    div.className = "ticket";
-    div.textContent = t.ticket_code;
-    div.onclick = ()=>selectTicket(t.ticket_code);
-    ticketList.appendChild(div);
-    if(i === 0) selectTicket(t.ticket_code);
+    const d=document.createElement("div");
+    d.className="ticket";d.textContent=t.ticket_code;
+    d.onclick=()=>selectTicket(t.ticket_code);
+    ticketList.appendChild(d);if(i===0)selectTicket(t.ticket_code);
   });
 }
 
 function selectTicket(code){
-  document.querySelectorAll(".ticket").forEach(d=>{
-    d.classList.toggle("active",d.textContent===code);
-  });
+  document.querySelectorAll(".ticket").forEach(d=>d.classList.toggle("active",d.textContent===code));
   loadChat(code);
 }
 
-// ===== 聊天 =====
-function roleTag(role){
-  if(role==="admin")return `<span class="tag admin">管理員</span>`;
-  if(role==="artist")return `<span class="tag artist">繪師</span>`;
-  return `<span class="tag client">委託人</span>`;
+function roleTag(r){
+  if(r==="admin")return`<span class="tag admin">管理員</span>`;
+  if(r==="artist")return`<span class="tag artist">繪師</span>`;
+  return`<span class="tag client">委託人</span>`;
 }
 
 async function loadChat(code){
   if(currentTicket===code)return;
-  currentTicket=code;
-  lastId=0;seenIds.clear();
-  messages.innerHTML="";
-  ticketInfo.innerHTML=`目前工單：<b>${code}</b>`;
-  await refreshChat();
-  if(timer)clearInterval(timer);
-  timer=setInterval(refreshChat,3000);
+  currentTicket=code;lastId=0;seenIds.clear();
+  messages.innerHTML="";ticketInfo.innerHTML=`目前工單：<b>${code}</b>`;
+  await refreshChat();if(timer)clearInterval(timer);timer=setInterval(refreshChat,3000);
 }
 
 async function refreshChat(){
-  if(!currentTicket)return;
-  await checkTicketStatus();
+  if(!currentTicket)return;await checkTicketStatus();
   const r=await fetch(API+`/api/chat/${currentTicket}?after=${lastId}`);
   const rows=await r.json();
   rows.forEach(m=>{
-    if(seenIds.has(m.id))return;
-    seenIds.add(m.id);
-    const div=document.createElement("div");
-    div.className="msg "+(m.from_site?"site":"dc");
-    div.innerHTML=`${roleTag(m.role)} <b>${m.username}</b>：${m.content}`;
-    messages.appendChild(div);
-    lastId=Math.max(lastId,m.id);
+    if(seenIds.has(m.id))return;seenIds.add(m.id);
+    const d=document.createElement("div");
+    d.className="msg "+(m.from_site?"site":"dc");
+    d.innerHTML=`${roleTag(m.role)} <b>${m.username}</b>：${m.content}`;
+    messages.appendChild(d);lastId=Math.max(lastId,m.id);
   });
   if(rows.length)messages.scrollTop=messages.scrollHeight;
 }
 
-// ===== 狀態檢查 & 鎖定 =====
 async function checkTicketStatus(){
   const token=localStorage.getItem("token");
-  const r=await fetch(API+`/api/ticket/${currentTicket}/status`,{
-    headers:{Authorization:"Bearer "+token}
-  });
+  const r=await fetch(API+`/api/ticket/${currentTicket}/status`,{headers:{Authorization:"Bearer "+token}});
   const d=await r.json();
-  if(d.status==="cancelled"||d.status==="archived"){
-    lockChat(d.status);
-  }
+  if(d.status==="cancelled"||d.status==="archived")lockChat(d.status);
 }
 
-function lockChat(status){
+function lockChat(s){
   chatCard.classList.add("locked");
-  msgInput.disabled=true;
-  sendBar.querySelector("button").disabled=true;
-  msgInput.placeholder =
-    status==="cancelled"
-      ? "此工單已中止，無法再操作"
-      : "此工單已結單，聊天室已關閉";
+  msgInput.disabled=true;sendBar.querySelector("button").disabled=true;
+  msgInput.placeholder=s==="cancelled"?"此工單已中止":"此工單已結單";
 }
 
-// ===== 發送 =====
 async function sendMsg(){
-  const v=msgInput.value.trim();
-  if(!v||!currentTicket)return;
-  const token=localStorage.getItem("token");
-  msgInput.value="";
-  await fetch(API+"/api/chat/send",{
-    method:"POST",
-    headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},
-    body:JSON.stringify({ticket_code:currentTicket,content:v})
-  });
+  const v=msgInput.value.trim();if(!v||!currentTicket)return;
+  const token=localStorage.getItem("token");msgInput.value="";
+  await fetch(API+"/api/chat/send",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},
+    body:JSON.stringify({ticket_code:currentTicket,content:v})});
 }
 
-// ===== 工單操作 =====
+function showConfirm(text,cb){
+  confirmCallback=cb;
+  document.getElementById("confirmText").textContent=text;
+  document.getElementById("confirmMask").style.display="flex";
+}
+function closeConfirm(){
+  document.getElementById("confirmMask").style.display="none";
+  confirmCallback=null;
+}
+document.getElementById("confirmYes").onclick=()=>{if(confirmCallback)confirmCallback();closeConfirm();};
+document.getElementById("confirmNo").onclick=closeConfirm;
+
 function cancelTicket(){
-  showConfirm("確定要中止委託？", async ()=>{
-    const token = localStorage.getItem("token");
-    await fetch(API+"/api/ticket/cancel",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        Authorization:"Bearer "+token
-      },
-      body:JSON.stringify({ticket_code: currentTicket})
-    });
+  showConfirm("確定要中止委託？",async()=>{
+    const token=localStorage.getItem("token");
+    await fetch(API+"/api/ticket/cancel",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},
+      body:JSON.stringify({ticket_code:currentTicket})});
     alert("已送出中止請求");
   });
 }
-
 function closeTicket(){
-  showConfirm("確定要結單？", async ()=>{
-    const token = localStorage.getItem("token");
-    await fetch(API+"/api/ticket/close",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        Authorization:"Bearer "+token
-      },
-      body:JSON.stringify({ticket_code: currentTicket})
-    });
+  showConfirm("確定要結單？",async()=>{
+    const token=localStorage.getItem("token");
+    await fetch(API+"/api/ticket/close",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},
+      body:JSON.stringify({ticket_code:currentTicket})});
     alert("已送出結單請求");
   });
 }
 
-checkLogin();
-
-let confirmCallback = null;
-
-function showConfirm(text, cb){
-  confirmCallback = cb;
-  document.getElementById("confirmText").textContent = text;
-  document.getElementById("confirmMask").style.display = "flex";
-}
-
-function closeConfirm(){
-  document.getElementById("confirmMask").style.display = "none";
-  confirmCallback = null;
-}
-
-document.getElementById("confirmYes").onclick = ()=>{
-  if(confirmCallback) confirmCallback();
-  closeConfirm();
-};
-document.getElementById("confirmNo").onclick = closeConfirm;
-  
+document.addEventListener("DOMContentLoaded",checkLogin);
 </script>
 </body>
 </html>
