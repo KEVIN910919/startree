@@ -80,6 +80,11 @@ button.danger{background:linear-gradient(135deg,#e86a6a,#c73737);color:#fff;}
   white-space: pre-wrap;   /* 保留換行 + 自動換行 */
   word-break: break-word;
 }
+
+.dc-emoji{
+  height: 1.2em;
+  vertical-align: middle;
+}
   
 </style>
 </head>
@@ -243,6 +248,21 @@ function selectTicket(code){
   loadChat(code);
 }
 
+function renderDiscordEmoji(text){
+  return text.replace(
+    /<a?:([a-zA-Z0-9_]+):(\d+)>/g,
+    (m, name, id) => {
+      const isAnim = m.startsWith("<a:");
+      const ext = isAnim ? "gif" : "png";
+      return `<img 
+        src="https://cdn.discordapp.com/emojis/${id}.${ext}"
+        alt="${name}"
+        class="dc-emoji"
+      >`;
+    }
+  );
+}
+  
 function roleTag(r){
   if(r==="admin")return`<span class="tag admin">管理員</span>`;
   if(r==="artist")return`<span class="tag artist">繪師</span>`;
@@ -300,13 +320,13 @@ async function refreshChat(){
 
     let content = m.content || "";
 
-    // 📷 圖片處理（後端存成：[image]filename.png）
+    // 📷 圖片處理
     if(content.startsWith("[image]")){
       const file = content.replace("[image]","");
       content = `<img src="${API}/uploads/${file}" style="max-width:240px;border-radius:8px">`;
     }else{
-      // 👤 mention 處理 <@id> → @名稱
       content = renderMentions(content);
+      content = renderDiscordEmoji(content);
     }
 
     d.innerHTML = `${roleTag(m.role)} <b>${m.username}</b>：${content}`;
