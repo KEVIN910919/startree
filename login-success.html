@@ -6,17 +6,32 @@
 </head>
 <body>
   <p>授權完成，請稍候…</p>
+
+  <pre id="debug"></pre>
+
   <script>
+    const dbg = (t) => {
+      document.getElementById("debug").textContent += t + "\n";
+      console.log(t);
+    };
+
     const token = new URLSearchParams(location.search).get("token");
+    dbg("收到 token = " + token);
+
     if(token){
       if(window.opener){
+        dbg("找到 opener，準備傳送 postMessage");
         window.opener.postMessage({ token }, "*");
-        window.close();
+        dbg("已送出 postMessage");
+        setTimeout(() => {
+          dbg("嘗試關閉視窗");
+          window.close();
+        }, 300);
       }else{
-        document.body.innerText = "找不到原視窗";
+        dbg("❌ 找不到原視窗 window.opener");
       }
     }else{
-      document.body.innerText = "沒有收到 token";
+      dbg("❌ 沒有收到 token");
     }
   </script>
 </body>
