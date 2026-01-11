@@ -76,9 +76,13 @@ input,textarea{
 </div>
 
 <script>
-const API = "https://api.dreamlight.site"; // 改成你後端
+const API = "https://api.dreamlight.site";
 let loginWin=null;
+let currentTicket=null;
+let timer=null;
+let lastId = 0;
 
+// ===== 登入 =====
 function login(){
   loginWin = window.open(API+"/auth/discord","dcLogin","width=500,height=700");
 }
@@ -90,6 +94,7 @@ window.addEventListener("message",(e)=>{
   alert("登入完成！");
 });
 
+// ===== UI 控制 =====
 const loginBox=document.getElementById("loginBox");
 const chatBox=document.getElementById("chatBox");
 const userArea=document.getElementById("userArea");
@@ -124,31 +129,32 @@ function logout(){
   });
 }
 
-// 聊天
-let currentTicket=null,timer=null;
-
+// ===== 聊天 =====
 async function loadChat(){
   const code=document.getElementById("ticketInput").value.trim();
   if(!code)return alert("請輸入工單代碼");
   currentTicket=code;
+  lastId = 0;
+  document.getElementById("messages").innerHTML="";
   await refreshChat();
   if(timer)clearInterval(timer);
-  timer=setInterval(refreshChat,3000);
+  timer=setInterval(refreshChat,1000); // 1 秒刷新
 }
 
 async function refreshChat(){
   if(!currentTicket)return;
-  const r=await fetch(API+`/api/chat/${currentTicket}`);
+  const r=await fetch(API+`/api/chat/${currentTicket}?after=${lastId}`);
   const rows=await r.json();
   const box=document.getElementById("messages");
-  box.innerHTML="";
+
   for(const m of rows){
     const div=document.createElement("div");
     div.className="msg "+(m.from_site?"site":"dc");
     div.textContent=`[${m.username}] ${m.content}`;
     box.appendChild(div);
+    lastId = m.id || lastId;
   }
-  box.scrollTop=box.scrollHeight;
+  if(rows.length) box.scrollTop=box.scrollHeight;
 }
 
 async function sendMsg(){
@@ -156,13 +162,22 @@ async function sendMsg(){
   const v=txt.value.trim();
   if(!v||!currentTicket)return;
   const token=localStorage.getItem("token");
+
+  // ① 先顯示在畫面上
+  const box=document.getElementById("messages");
+  const div=document.createElement("div");
+  div.className="msg site";
+  div.textContent=`[我] ${v}`;
+  box.appendChild(div);
+  box.scrollTop=box.scrollHeight;
+  txt.value="";
+
+  // ② 再送後端
   await fetch(API+"/api/chat/send",{
     method:"POST",
     headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},
     body:JSON.stringify({ticket_code:currentTicket,content:v})
   });
-  txt.value="";
-  setTimeout(refreshChat,500);
 }
 
 checkLogin();
