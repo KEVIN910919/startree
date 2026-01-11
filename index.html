@@ -198,17 +198,35 @@ async function checkLogin(){
 }
 function logout(){localStorage.removeItem("token");location.reload();}
 
-async function loadTicketList(){
+async function loadTicketList(selectCode=null){
   const token=localStorage.getItem("token");
   const r=await fetch(API+"/api/my-tickets",{headers:{Authorization:"Bearer "+token}});
-  const rows=await r.json();ticketList.innerHTML="";
-  if(!rows.length){ticketList.innerHTML="<div style='opacity:.7;padding:8px'>目前沒有進行中的工單</div>";return;}
+  const rows=await r.json();
+  ticketList.innerHTML="";
+
+  if(!rows.length){
+    ticketList.innerHTML="<div style='opacity:.7;padding:8px'>目前沒有進行中的工單</div>";
+    return;
+  }
+
+  let selected = false;
+
   rows.forEach((t,i)=>{
     const d=document.createElement("div");
-    d.className="ticket";d.textContent=t.ticket_code;
+    d.className="ticket";
+    d.textContent=t.ticket_code;
     d.onclick=()=>selectTicket(t.ticket_code);
-    ticketList.appendChild(d);if(i===0)selectTicket(t.ticket_code);
+    ticketList.appendChild(d);
+
+    if(selectCode && t.ticket_code===selectCode){
+      selectTicket(t.ticket_code);
+      selected = true;
+    }
   });
+
+  if(!selected){
+    selectTicket(rows[0].ticket_code);
+  }
 }
 
 function selectTicket(code){
@@ -315,8 +333,8 @@ async function loadArtists(){
 
   list.forEach(a=>{
     const o = document.createElement("option");
-    o.value = a.id;
-    o.textContent = a.name;
+    o.value = a.discord_user_id;      // 正確欄位
+    o.textContent = a.display_name;   // 正確欄位
     sel.appendChild(o);
   });
 
@@ -355,11 +373,7 @@ async function submitCreateTicket(){
 
   alert("工單已建立！");
   closeCreate();
-  await loadTicketList();
-  if(d.ticket_code){
-    selectTicket(d.ticket_code);
-  }
-}
+  await loadTicketList(d.ticket_code);
 
 window.onload = ()=>{
   checkLogin();
