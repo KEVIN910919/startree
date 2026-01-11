@@ -28,6 +28,7 @@ header{
   z-index:1000;
 }
 .loginGlow{
+  pointer-events: none;
   position:absolute;width:500px;height:500px;
   background:radial-gradient(circle,#7fffd4 0%,transparent 70%);
   filter:blur(80px);
@@ -374,6 +375,7 @@ async function submitCreateTicket(){
   alert("工單已建立！");
   closeCreate();
   await loadTicketList(d.ticket_code);
+}
 
 window.onload = ()=>{
   checkLogin();
