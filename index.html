@@ -356,6 +356,8 @@ async function submitCreateTicket(){
     usage: document.getElementById("f_usage").value,
   };
 
+  console.log("送出的 artist_id =", data.artist_id);
+
   const token = localStorage.getItem("token");
   const r = await fetch(API+"/api/ticket/create",{
     method:"POST",
