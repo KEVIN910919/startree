@@ -4,15 +4,13 @@
   <meta charset="UTF-8">
   <title>登入完成</title>
 </head>
-<body>
-  <p>授權完成，請稍候…</p>
-
+<body style="background:red;color:white;font-size:24px;">
+  <h1>這是新版本測試頁</h1>
   <pre id="debug"></pre>
 
   <script>
     const dbg = (t) => {
       document.getElementById("debug").textContent += t + "\n";
-      console.log(t);
     };
 
     const token = new URLSearchParams(location.search).get("token");
@@ -20,15 +18,14 @@
 
     if(token){
       if(window.opener){
-        dbg("找到 opener，準備傳送 postMessage");
+        dbg("找到 opener，送出 postMessage");
         window.opener.postMessage({ token }, "*");
-        dbg("已送出 postMessage");
-        dbg("⚠️ 暫停自動關閉，請手動關閉視窗");
+        dbg("已送出，不自動關閉");
       }else{
-        dbg("❌ 找不到原視窗 window.opener");
+        dbg("❌ 找不到 opener");
       }
     }else{
-      dbg("❌ 沒有收到 token");
+      dbg("❌ 沒有 token");
     }
   </script>
 </body>
