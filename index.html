@@ -115,6 +115,8 @@ button.danger{background:linear-gradient(135deg,#e86a6a,#c73737);color:#fff;}
       </div>
       <div id="messages"></div>
       <div id="sendBar">
+        <input type="file" id="imgInput" accept="image/*" style="display:none">
+        <button onclick="document.getElementById('imgInput').click()">📷</button>
         <textarea id="msgInput" rows="2" placeholder="輸入訊息…"></textarea>
         <button onclick="sendMsg()">送出</button>
       </div>
@@ -283,17 +285,36 @@ async function loadChat(code){
 }
 
 async function refreshChat(){
-  if(!currentTicket)return;await checkTicketStatus();
-  const r=await fetch(API+`/api/chat/${currentTicket}?after=${lastId}`);
-  const rows=await r.json();
+  if(!currentTicket) return;
+  await checkTicketStatus();
+
+  const r = await fetch(API+`/api/chat/${currentTicket}?after=${lastId}`);
+  const rows = await r.json();
+
   rows.forEach(m=>{
-    if(seenIds.has(m.id))return;seenIds.add(m.id);
-    const d=document.createElement("div");
-    d.className="msg "+(m.from_site?"site":"dc");
-    d.innerHTML=`${roleTag(m.role)} <b>${m.username}</b>：${renderMentions(m.content)}`;
-    messages.appendChild(d);lastId=Math.max(lastId,m.id);
+    if(seenIds.has(m.id)) return;
+    seenIds.add(m.id);
+
+    const d = document.createElement("div");
+    d.className = "msg " + (m.from_site ? "site" : "dc");
+
+    let content = m.content || "";
+
+    // 📷 圖片處理（後端存成：[image]filename.png）
+    if(content.startsWith("[image]")){
+      const file = content.replace("[image]","");
+      content = `<img src="${API}/uploads/${file}" style="max-width:240px;border-radius:8px">`;
+    }else{
+      // 👤 mention 處理 <@id> → @名稱
+      content = renderMentions(content);
+    }
+
+    d.innerHTML = `${roleTag(m.role)} <b>${m.username}</b>：${content}`;
+    messages.appendChild(d);
+    lastId = Math.max(lastId, m.id);
   });
-  if(rows.length)messages.scrollTop=messages.scrollHeight;
+
+  if(rows.length) messages.scrollTop = messages.scrollHeight;
 }
 
 async function checkTicketStatus(){
@@ -411,6 +432,24 @@ async function submitCreateTicket(){
   closeCreate();
   await loadTicketList(d.ticket_code);
 }
+
+document.getElementById("imgInput").addEventListener("change", async e=>{
+  const file = e.target.files[0];
+  if(!file || !currentTicket) return;
+
+  const token = localStorage.getItem("token");
+  const fd = new FormData();
+  fd.append("ticket_code", currentTicket);
+  fd.append("image", file);
+
+  await fetch(API+"/api/chat/send-image",{
+    method:"POST",
+    headers:{ Authorization:"Bearer "+token },
+    body: fd
+  });
+
+  e.target.value = "";
+});
 
 window.onload = ()=>{
   checkLogin();
