@@ -125,6 +125,14 @@ button.danger{background:linear-gradient(135deg,#e86a6a,#c73737);color:#fff;}
         <textarea id="msgInput" rows="2" placeholder="輸入訊息…"></textarea>
         <button onclick="sendMsg()">送出</button>
       </div>
+      <div id="uploadBar" style="display:none;margin-top:6px">
+        <div style="height:6px;background:#0b2e31;border-radius:6px;overflow:hidden">
+          <div id="uploadProg" style="height:100%;width:0%;background:#7fffd4"></div>
+        </div>
+        <div id="uploadText" style="font-size:12px;opacity:.8;margin-top:4px">
+          上傳中…
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -453,7 +461,7 @@ async function submitCreateTicket(){
   await loadTicketList(d.ticket_code);
 }
 
-document.getElementById("imgInput").addEventListener("change", async e=>{
+document.getElementById("imgInput").addEventListener("change", e=>{
   const file = e.target.files[0];
   if(!file || !currentTicket) return;
 
@@ -462,12 +470,41 @@ document.getElementById("imgInput").addEventListener("change", async e=>{
   fd.append("ticket_code", currentTicket);
   fd.append("image", file);
 
-  await fetch(API+"/api/chat/send-image",{
-    method:"POST",
-    headers:{ Authorization:"Bearer "+token },
-    body: fd
-  });
+  const bar = document.getElementById("uploadBar");
+  const prog = document.getElementById("uploadProg");
+  const text = document.getElementById("uploadText");
 
+  bar.style.display = "block";
+  prog.style.width = "0%";
+  text.textContent = "上傳中…";
+
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", API+"/api/chat/send-image");
+  xhr.setRequestHeader("Authorization","Bearer "+token);
+
+  xhr.upload.onprogress = e=>{
+    if(e.lengthComputable){
+      const p = Math.floor((e.loaded / e.total) * 100);
+      prog.style.width = p + "%";
+      text.textContent = `上傳中… ${p}%`;
+    }
+  };
+
+  xhr.onload = ()=>{
+    if(xhr.status===200){
+      prog.style.width = "100%";
+      text.textContent = "上傳完成！";
+      setTimeout(()=>{bar.style.display="none"},800);
+    }else{
+      text.textContent = "上傳失敗";
+    }
+  };
+
+  xhr.onerror = ()=>{
+    text.textContent = "上傳錯誤";
+  };
+
+  xhr.send(fd);
   e.target.value = "";
 });
 
