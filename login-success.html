@@ -15,30 +15,31 @@ body{
   padding:24px;box-shadow:0 0 30px #0008;
   text-align:center;max-width:400px;
 }
+small{opacity:.7;}
 </style>
 </head>
 <body>
 <div class="card">
   <h2>🌟 授權完成</h2>
   <p>正在回傳登入資訊給星樹工坊…</p>
-  <pre id="debug"></pre>
+  <small id="status">處理中</small>
 </div>
 
 <script>
-const dbg=t=>document.getElementById("debug").textContent+=t+"\n";
-const token=new URLSearchParams(location.search).get("token");
-dbg("收到 token = "+token);
+const status = t => document.getElementById("status").textContent = t;
+
+const token = new URLSearchParams(location.search).get("token");
 
 if(token){
   if(window.opener){
-    window.opener.postMessage({token},"*");
-    dbg("已傳送給原視窗");
-    setTimeout(()=>window.close(),800);
+    window.opener.postMessage({ token }, "*");
+    status("已安全傳送，視窗即將關閉");
+    setTimeout(()=>window.close(), 800);
   }else{
-    dbg("找不到 opener，請手動關閉");
+    status("找不到原視窗，請手動關閉本頁");
   }
 }else{
-  dbg("沒有收到 token");
+  status("未收到授權資料，請重新登入");
 }
 </script>
 </body>
