@@ -5,42 +5,19 @@
 <title>星樹工坊｜工單聊天室</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-body{
-  margin:0;font-family:system-ui;
-  background:radial-gradient(circle at top,#1b1f33,#0b0e16);
-  color:#fff;
-}
-header{
-  padding:14px 20px;
-  background:linear-gradient(90deg,#1b2140,#101425);
-  display:flex;justify-content:space-between;align-items:center;
-  box-shadow:0 2px 10px #0008;
-}
-button{
-  background:linear-gradient(135deg,#6a7cff,#9aa7ff);
-  border:none;color:#fff;padding:10px 14px;
-  border-radius:8px;cursor:pointer;
-}
+body{margin:0;font-family:system-ui;background:radial-gradient(circle at top,#1b1f33,#0b0e16);color:#fff;}
+header{padding:14px 20px;background:linear-gradient(90deg,#1b2140,#101425);display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 10px #0008;}
+button{background:linear-gradient(135deg,#6a7cff,#9aa7ff);border:none;color:#fff;padding:10px 14px;border-radius:8px;cursor:pointer;}
 button:hover{filter:brightness(1.1);}
 button.danger{background:linear-gradient(135deg,#d44,#f66);}
 #loginBox,#chatBox{display:none;padding:20px;}
-.card{
-  background:#14182a;border-radius:14px;
-  padding:16px;box-shadow:0 0 20px #0006;
-}
-#messages{
-  height:55vh;overflow-y:auto;
-  background:#0c1020;border-radius:10px;
-  padding:12px;margin:10px 0;
-}
+.card{background:#14182a;border-radius:14px;padding:16px;box-shadow:0 0 20px #0006;}
+#messages{height:55vh;overflow-y:auto;background:#0c1020;border-radius:10px;padding:12px;margin:10px 0;}
 .msg{margin:6px 0;font-size:14px;}
 .site{color:#7cf;}
 .dc{color:#fc7;}
 #sendBar{display:flex;gap:8px;}
-input,textarea{
-  flex:1;background:#0c1020;border:none;
-  color:#fff;padding:10px;border-radius:8px;
-}
+input,textarea{flex:1;background:#0c1020;border:none;color:#fff;padding:10px;border-radius:8px;}
 </style>
 </head>
 <body>
@@ -64,9 +41,7 @@ input,textarea{
       <input id="ticketInput" placeholder="COM-20260101010101" />
       <button onclick="loadChat()">載入聊天</button>
     </div>
-
     <div id="messages"></div>
-
     <div id="sendBar">
       <textarea id="msgInput" rows="2" placeholder="輸入訊息…"></textarea>
       <button onclick="sendMsg()">送出</button>
@@ -75,41 +50,32 @@ input,textarea{
 </div>
 
 <script>
-const API = "https://api.dreamlight.site";
-let loginWin=null;
-let currentTicket=null;
-let timer=null;
-let lastId = 0;
+const API="https://api.dreamlight.site";
+let loginWin=null,currentTicket=null,timer=null,lastId=0;
+let seenIds=new Set();
 
 // ===== 登入 =====
 function login(){
-  loginWin = window.open(API+"/auth/discord","dcLogin","width=500,height=700");
+  loginWin=window.open(API+"/auth/discord","dcLogin","width=500,height=700");
 }
-
 window.addEventListener("message",(e)=>{
   if(!e.data||!e.data.token)return;
   localStorage.setItem("token",e.data.token);
   checkLogin();
-  alert("登入完成！");
 });
 
-// ===== UI 控制 =====
+// ===== UI =====
 const loginBox=document.getElementById("loginBox");
 const chatBox=document.getElementById("chatBox");
 const userArea=document.getElementById("userArea");
 
 function showLogin(){
-  loginBox.style.display="block";
-  chatBox.style.display="none";
-  userArea.innerHTML="";
+  loginBox.style.display="block";chatBox.style.display="none";userArea.innerHTML="";
 }
-
 function showChat(user){
-  loginBox.style.display="none";
-  chatBox.style.display="block";
+  loginBox.style.display="none";chatBox.style.display="block";
   userArea.innerHTML=`👤 ${user.username} <button class='danger' onclick='logout()'>登出</button>`;
 }
-
 async function checkLogin(){
   const token=localStorage.getItem("token");
   if(!token){showLogin();return;}
@@ -118,31 +84,26 @@ async function checkLogin(){
   if(d.error){showLogin();return;}
   showChat(d);
 }
-
 function logout(){
   const token=localStorage.getItem("token");
   fetch(API+"/api/logout",{method:"POST",headers:{Authorization:"Bearer "+token}})
-  .finally(()=>{
-    localStorage.removeItem("token");
-    location.reload();
-  });
+  .finally(()=>{localStorage.removeItem("token");location.reload();});
 }
 
 // ===== 聊天 =====
 async function loadChat(){
   const code=document.getElementById("ticketInput").value.trim();
-  if(!code) return alert("請輸入工單代碼");
+  if(!code)return alert("請輸入工單代碼");
+  if(currentTicket===code)return;
 
-  if(currentTicket === code) return;
-
-  currentTicket = code;
-  lastId = 0;
+  currentTicket=code;
+  lastId=0;
+  seenIds.clear();
   document.getElementById("messages").innerHTML="";
 
   await refreshChat();
-
-  if(timer){ clearInterval(timer); timer=null; }
-  timer = setInterval(refreshChat, 3000);
+  if(timer){clearInterval(timer);timer=null;}
+  timer=setInterval(refreshChat,3000);
 }
 
 async function refreshChat(){
@@ -152,13 +113,16 @@ async function refreshChat(){
   const box=document.getElementById("messages");
 
   for(const m of rows){
+    if(seenIds.has(m.id))continue;
+    seenIds.add(m.id);
+
     const div=document.createElement("div");
     div.className="msg "+(m.from_site?"site":"dc");
     div.textContent=`[${m.username}] ${m.content}`;
     box.appendChild(div);
-    lastId = Math.max(lastId, m.id);
+    lastId=Math.max(lastId,m.id);
   }
-  if(rows.length) box.scrollTop=box.scrollHeight;
+  if(rows.length)box.scrollTop=box.scrollHeight;
 }
 
 async function sendMsg(){
@@ -167,7 +131,6 @@ async function sendMsg(){
   if(!v||!currentTicket)return;
   const token=localStorage.getItem("token");
 
-  // 先顯示在畫面
   const box=document.getElementById("messages");
   const div=document.createElement("div");
   div.className="msg site";
@@ -176,7 +139,6 @@ async function sendMsg(){
   box.scrollTop=box.scrollHeight;
   txt.value="";
 
-  // 再送後端
   await fetch(API+"/api/chat/send",{
     method:"POST",
     headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},
