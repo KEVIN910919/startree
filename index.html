@@ -31,10 +31,18 @@ button.danger{background:linear-gradient(135deg,#d44,#f66);}
 </head>
 <body>
 <header>
-  <div>🌲 星樹工坊｜工單聊天室</div>
+  <div>🌲 星樹工坊｜委託工單系統</div>
   <div id="userArea"></div>
 </header>
 
+<div id="loginBox" style="display:none; padding:40px;">
+  <div class="card" style="max-width:420px;margin:auto;text-align:center;">
+    <h2>登入星樹工坊</h2>
+    <p>請使用 Discord 帳號登入以同步工單與聊天。</p>
+    <button onclick="login()">使用 Discord 登入</button>
+  </div>
+</div>
+  
 <div class="layout" id="chatLayout" style="display:none;">
   <div class="sidebar">
     <h3>📁 我的工單</h3>
@@ -58,6 +66,11 @@ button.danger{background:linear-gradient(135deg,#d44,#f66);}
 </div>
 
 <script>
+
+function login(){
+  window.open(API+"/auth/discord","dcLogin","width=500,height=700");
+}
+  
 const API="https://api.dreamlight.site";
 let currentTicket=null,timer=null,lastId=0,seenIds=new Set();
 
@@ -71,10 +84,20 @@ window.addEventListener("message",(e)=>{
 
 async function checkLogin(){
   const token=localStorage.getItem("token");
-  if(!token)return;
+  if(!token){
+    loginBox.style.display="block";
+    chatLayout.style.display="none";
+    userArea.innerHTML="";
+    return;
+  }
   const r=await fetch(API+"/api/me",{headers:{Authorization:"Bearer "+token}});
   const d=await r.json();
-  if(d.error)return;
+  if(d.error){
+    loginBox.style.display="block";
+    chatLayout.style.display="none";
+    return;
+  }
+  loginBox.style.display="none";
   chatLayout.style.display="flex";
   userArea.innerHTML=`👤 ${d.username} <button class="danger" onclick="logout()">登出</button>`;
   loadTicketList();
