@@ -173,7 +173,13 @@ const ticketInfo=document.getElementById("ticketInfo");
 const chatCard=document.getElementById("chatCard");
 const msgInput=document.getElementById("msgInput");
 const sendBar=document.getElementById("sendBar");
-
+const urlParams = new URLSearchParams(location.search);
+const urlToken = urlParams.get("token");
+if(urlToken){
+  localStorage.setItem("token", urlToken);
+  history.replaceState({}, "", location.pathname);
+}
+ 
 function login(){window.open(API+"/auth/discord","dcLogin","width=500,height=700");}
 
 window.addEventListener("message",(e)=>{
@@ -348,7 +354,10 @@ async function submitCreateTicket(){
 
   alert("工單已建立！");
   closeCreate();
-  loadTicketList();
+  await loadTicketList();
+  if(d.ticket_code){
+    selectTicket(d.ticket_code);
+  }
 }
 
 window.onload = ()=>{
